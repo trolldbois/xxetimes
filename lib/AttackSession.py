@@ -52,7 +52,7 @@ class AttackSession(object):
             return None
 
     def requestFromFile(self, requestFileName):
-        with open(requestFileName,'r') as fp:
+        with open(requestFileName, 'rb') as fp:
             raw_request = fp.read()
         requestHandler = HTTPFileParser(raw_request)
         return requestHandler
