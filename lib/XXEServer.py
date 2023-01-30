@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from http.server import BaseHTTPRequestHandler,HTTPServer
 from hashlib import sha1
@@ -15,8 +15,8 @@ DTD_TEMPLATE = """
 LAST_CONTENTS = ''
 
 def makeCustomHandlerClass(dtd_name, dtd_contents, isb64):
-    '''class factory method for injecting custom args into handler class. 
-    see here for more info: http://stackoverflow.com/questions/21631799/how-can-i-pass-parameters-to-a-requesthandler'''
+    """class factory method for injecting custom args into handler class. 
+    see here for more info: http://stackoverflow.com/questions/21631799/how-can-i-pass-parameters-to-a-requesthandler"""
     class xxeHandler(BaseHTTPRequestHandler, object):
         def __init__(self, *args, **kwargs):
             self.DTD_NAME = dtd_name
@@ -25,7 +25,7 @@ def makeCustomHandlerClass(dtd_name, dtd_contents, isb64):
             super(xxeHandler, self).__init__(*args, **kwargs)
             
         def log_message(self, format, *args):
-            '''overwriting this method to silence stderr output'''
+            """overwriting this method to silence stderr output"""
             return
     
         def do_GET(self):
@@ -52,9 +52,9 @@ def makeCustomHandlerClass(dtd_name, dtd_contents, isb64):
     
 
 def displayContents(contents, isBase64=False):
-    '''my hacky way to not display duplicate contents. 
+    """my hacky way to not display duplicate contents. 
     for some reason xml sends back to back requests
-    and i only want to show the first one'''
+    and i only want to show the first one"""
     global LAST_CONTENTS
     newContents = sha1(contents).hexdigest()
     if LAST_CONTENTS != newContents:

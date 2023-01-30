@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os
 import signal
@@ -27,7 +27,7 @@ def parseArgs():
     parser.add_argument('-f', '--requestFile', dest='requestFile', required=True, help="Vulnerable request file with {targetFilename}, {xxeHelperServerInterface}, and {xxeHelperServerPort} marked")
     parser.add_argument('-p', '--port', dest='port', default=80, help="Port on target host (eg 80, 443)")       #TODO: implement actually using this
     parser.add_argument('-t', '--targetHost', dest='targetHost', help="Override host header in request file")   #TODO: implement actually using this
-    parser.add_argument('-l', '--listenPort', dest='listenPort', default=8000, help="Port for local DTD helper server")
+    parser.add_argument('-l', '--listenPort', dest='listenPort', type=int, default=8000, help="Port for local DTD helper server")
     parser.add_argument('-i', '--listenIP', dest='interface', required=True, help="Bind IP address for local DTD helper server")
     parser.add_argument('--b64', dest='isb64', action='store_true', default=False, help="Flag if data will be base64 encoded (e.g. using php's convert.base64 function for files)")
     args = parser.parse_args()
