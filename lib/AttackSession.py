@@ -17,7 +17,7 @@ class HTTPFileParser(BaseHTTPRequestHandler):
     # def send_error(self, code, message):
     #     self.error_code = code
     #     self.error_message = message
-    def send_error(self, code: int, message: str | None = ..., explain: str | None = ...) -> None:
+    def send_error(self, code: int, message: str, explain: str) -> None:
         self.error_code = code
         self.error_message = message
 
