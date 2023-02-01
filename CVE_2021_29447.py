@@ -126,7 +126,7 @@ def build_payload(session, target_url, dtd_url, dtd_filename, **kwargs) -> (str,
   # test 1 = load BURP file, just replace the payload
   headers_raw = open('request.headers', 'r').read()
   # load headers in session
-  for h_line in headers_raw.split('\r\n'):
+  for h_line in headers_raw.split('\n'):  # FIXME newline.
     try:
       h, rest = h_line.split(': ')
       if h.lower() in ['cookies', 'origin', 'content-type']:

