@@ -104,10 +104,7 @@ def displayContents(contents, isBase64=False):
     newContents = sha1(contents).hexdigest()
     if LAST_CONTENTS != newContents:
         print("[+] Received response, displaying\n")
-        if not isBase64:
-            print(urllib.parse.unquote(contents))
-        else:
-            print(urllib.parse.unquote(contents).encode().decode('base64'))
+        print(base64.b64decode(contents).decode())
         LAST_CONTENTS = newContents
         print("------\n")
     return
