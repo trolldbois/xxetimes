@@ -107,6 +107,9 @@ def displayContents(contents, isBase64=False):
         print(base64.b64decode(contents).decode())
         LAST_CONTENTS = newContents
         print("------\n")
+    else:
+        # cleanup
+        LAST_CONTENTS = None
     return
     
   
