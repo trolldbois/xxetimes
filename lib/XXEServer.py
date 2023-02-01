@@ -72,10 +72,7 @@ def startServer(ip, port=8000, isb64=False):
     try:
         DTD_CONTENTS = DTD_TEMPLATE.format(ip, port)
         xxeHandler = makeCustomHandlerClass(DTD_NAME, DTD_CONTENTS, isb64)
-        server = HTTPServer((ip, port), xxeHandler)
-        #touches a file to let the other process know the server is running. super hacky
-        with open('.server_started','w') as check:
-            check.write('true')
+        server = HTTPServer((str(ip), port), xxeHandler)
         print(('\n[+] started server on {}:{}'.format(ip,port)))
         print('\n[+] Request away. Happy hunting.')
         print('[+] press Ctrl-C to close\n')
