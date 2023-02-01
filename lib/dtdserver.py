@@ -83,8 +83,8 @@ def makeCustomHandlerClass(dtd_url, isb64):
 
         def _decode_file_content(self):
             # assume it is file contents and spit it out
-            if self.path[0:2] == '/?':  # hacky way to get rid of beginning chars
-                contents = self.path[2:]
+            if self.path.startswith('/?p='):  # hacky way to get rid of beginning chars
+                contents = self.path[4:]
             else:
                 contents = self.path
             displayContents(contents, self.isb64)
