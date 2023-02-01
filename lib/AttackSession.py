@@ -36,7 +36,7 @@ class AttackSession(object):
     
     def __init__(self, dtdserver, proxies=None, **kwargs):
         # that is static for now / TODO use b64 in dtd filename to dynamically encode it
-        self.dtd_url = dtdserver
+        self.dtd_url = f'http://{dtdserver[0]}:{dtdserver[1]}'
         self.proxies = proxies
         # the session we will use
         self._session = None
