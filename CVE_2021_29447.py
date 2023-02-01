@@ -133,6 +133,7 @@ def build_payload(session, target_url, dtd_url, dtd_filename, **kwargs) -> (str,
         headers[h] = rest
     except:
       ...
+  logging.debug(f'{headers=}')
   # load data in session
   data = open('request.data', 'rb').read()
   data = data + wav_payload.getvalue()
