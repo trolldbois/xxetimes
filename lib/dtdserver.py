@@ -101,7 +101,7 @@ def displayContents(contents, isBase64=False):
     for some reason xml sends back to back requests
     and i only want to show the first one"""
     global LAST_CONTENTS
-    newContents = sha1(contents).hexdigest()
+    newContents = sha1(contents.encode()).hexdigest()
     if LAST_CONTENTS != newContents:
         print("[+] Received response, displaying\n")
         print(base64.b64decode(contents).decode())
